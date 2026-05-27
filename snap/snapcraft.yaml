@@ -1,0 +1,63 @@
+name: puter
+version: '2.5.1'
+summary: Desktop environment in the browser
+description: |
+  Puter is an advanced, open-source internet operating system designed to be
+  feature-rich, exceptionally fast, and highly extensible. It can be used as
+  a cloud-based personal computer, a platform for building and deploying web
+  apps, or a friendly server environment.
+
+  **This snap is experimental.** Install from the edge channel and report
+  issues at https://github.com/HeyPuter/puter/issues.
+
+  After installation the service starts automatically on port 4100.
+  Open http://puter.localhost:4100 in your browser.
+
+  Configure the port with:
+    sudo snap set puter port=4100
+
+grade: devel
+confinement: strict
+base: core24
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+
+apps:
+  puter:
+    command: bin/puter-wrapper
+    daemon: simple
+    restart-condition: on-failure
+    plugs:
+      - network
+      - network-bind
+
+parts:
+  puter:
+    plugin: npm
+    source: .
+    npm-include-node: true
+    npm-node-version: "24.2.0"
+    build-packages:
+      - python3
+      - make
+      - g++
+      - git
+    build-environment:
+      - HUSKY: "0"
+      - npm_config_fund: "false"
+      - npm_config_audit: "false"
+    override-build: |
+      craftctl default
+      # Build TypeScript and frontend bundles
+      npm run build:ts
+      cd src/gui && node ./build.js && cd ../..
+      cd src/puter-js && npm run build && cd ../..
+      # Install the wrapper script
+      mkdir -p "$CRAFT_PART_INSTALL/bin"
+      cp "$CRAFT_PROJECT_DIR/snap/local/puter-wrapper" "$CRAFT_PART_INSTALL/bin/puter-wrapper"
+      chmod +x "$CRAFT_PART_INSTALL/bin/puter-wrapper"
+
+hooks:
+  configure:
+    plugs: []
