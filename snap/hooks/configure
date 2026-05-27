@@ -8,4 +8,18 @@ set -eu
 PORT=$(snapctl get port)
 if [ -z "$PORT" ]; then
     snapctl set port=4100
+    PORT=4100
+fi
+
+# Validate port is a number in the acceptable range.
+case "$PORT" in
+    ''|*[!0-9]*)
+        echo "Error: port must be a numeric value, got '$PORT'" >&2
+        exit 1
+        ;;
+esac
+
+if [ "$PORT" -lt 1024 ] || [ "$PORT" -gt 65535 ]; then
+    echo "Error: port must be between 1024 and 65535, got '$PORT'" >&2
+    exit 1
 fi
