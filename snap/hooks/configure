@@ -1,0 +1,11 @@
+#!/bin/sh
+# Snap configure hook — applies `snap set puter key=value` changes.
+# Currently supported keys:
+#   port  — HTTP port the server listens on (default: 4100)
+
+set -eu
+
+PORT=$(snapctl get port)
+if [ -z "$PORT" ]; then
+    snapctl set port=4100
+fi

@@ -1,0 +1,29 @@
+#!/bin/sh
+# Wrapper script for the Puter snap daemon.
+# Reads snap configuration and launches the Node.js server.
+
+set -eu
+
+PORT=$(snapctl get port)
+PORT="${PORT:-4100}"
+
+export PUTER_CONFIG_PATH="$SNAP_COMMON/config.json"
+
+# Generate a minimal config if none exists yet.
+if [ ! -f "$PUTER_CONFIG_PATH" ]; then
+    cat > "$PUTER_CONFIG_PATH" <<EOF
+{
+    "domain": "puter.localhost",
+    "protocol": "http",
+    "pub_port": $PORT,
+    "env": "prod",
+    "http_port": $PORT
+}
+EOF
+fi
+
+cd "$SNAP"
+exec "$SNAP/bin/node" \
+    --enable-source-maps \
+    -r ./dist/src/backend/telemetry.js \
+    ./dist/src/backend/index.js
